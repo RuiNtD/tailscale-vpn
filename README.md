@@ -1,4 +1,4 @@
-# TSVPN
+# Tailscale-VPN
 
 Small CLI tool and JavaScript library for suggesting and connecting to Tailscale exit nodes
 
