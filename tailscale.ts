@@ -132,6 +132,9 @@ export async function suggestMullvadNode(
   const current = mvNodes.find((v) => v.ExitNode);
   if (current) return current;
 
+  // TODO: As far as I can tell, Tailscale's GUI just picks a random node
+  // out of the highest priority nodes. This should be updated if there's a
+  // better method.
   return sample(mvNodes);
 }
 
