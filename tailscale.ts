@@ -3,7 +3,7 @@ import * as z from "zod";
 import { isString, sample } from "@es-toolkit/es-toolkit";
 import pMemoize from "p-memoize";
 
-const TSExitNodeLocation = z.looseObject(
+const ExitNodeLocation = z.looseObject(
   {
     Country: z.string(),
     CountryCode: z.string(),
@@ -13,7 +13,7 @@ const TSExitNodeLocation = z.looseObject(
   },
   "Not a location-based exit node"
 );
-const TSPeer = z.looseObject({
+export const Peer = z.looseObject({
   ID: z.string(),
   PublicKey: z.string(),
   HostName: z.string(),
@@ -23,21 +23,21 @@ const TSPeer = z.looseObject({
   Online: z.boolean(),
   ExitNode: z.boolean(),
   ExitNodeOption: z.boolean(),
-  Location: TSExitNodeLocation.optional(),
+  Location: ExitNodeLocation.optional(),
 });
-type TSPeer = z.infer<typeof TSPeer>;
+export type Peer = z.infer<typeof Peer>;
 
-const TSExitNode = TSPeer.extend({
+export const ExitNode = Peer.extend({
   ExitNodeOption: z.literal(true, "Not an exit node"),
 });
-type TSExitNode = z.infer<typeof TSExitNode>;
+export type ExitNode = z.infer<typeof ExitNode>;
 
-const TSMullvadNode = TSExitNode.extend({
-  Location: TSExitNodeLocation,
+export const MullvadNode = ExitNode.extend({
+  Location: ExitNodeLocation,
 });
-type TSMullvadNode = z.infer<typeof TSMullvadNode>;
+export type MullvadNode = z.infer<typeof MullvadNode>;
 
-const TSStatus = z.object({
+export const Status = z.object({
   ExitNodeStatus: z
     .object({
       ID: z.string(),
@@ -45,36 +45,36 @@ const TSStatus = z.object({
     })
     .optional(),
   MagicDNSSuffix: z.string(),
-  Peer: z.record(z.string(), TSPeer),
+  Peer: z.record(z.string(), Peer),
 });
-type TSStatus = z.infer<typeof TSStatus>;
+export type Status = z.infer<typeof Status>;
 
-async function _getStatus(): Promise<TSStatus> {
-  return TSStatus.parse(await $`tailscale status --json`.json());
+async function _getStatus(): Promise<Status> {
+  return Status.parse(await $`tailscale status --json`.json());
 }
 export const getStatus = pMemoize(_getStatus);
 
 // Can be not a TSExitNode if peer is no longer running as an exit node
-export async function getCurrentExitNode(): Promise<TSPeer | undefined> {
+export async function getCurrentExitNode(): Promise<Peer | undefined> {
   const status = (await getStatus()).ExitNodeStatus;
   if (!status) return;
 
   return await getPeer(status.ID);
 }
 
-async function _getSuggestedExitNode(): Promise<TSExitNode | undefined> {
+async function _getSuggestedExitNode(): Promise<ExitNode | undefined> {
   const lines = await $`tailscale exit-node suggest`.lines();
   const match = lines[0].match(/: (.*)/);
   if (!match) return;
 
-  return TSExitNode.parse(await getPeer(match[1]));
+  return ExitNode.parse(await getPeer(match[1]));
 }
 export const getSuggestedExitNode = pMemoize(_getSuggestedExitNode);
 
-export async function getPeers(): Promise<TSPeer[]> {
+export async function getPeers(): Promise<Peer[]> {
   return Object.values((await getStatus()).Peer);
 }
-export async function getPeer(name: string): Promise<TSPeer | undefined> {
+export async function getPeer(name: string): Promise<Peer | undefined> {
   const dnsSuffix = (await getStatus()).MagicDNSSuffix;
   const peers = await getPeers();
   const namelc = name.toLowerCase();
@@ -89,17 +89,17 @@ export async function getPeer(name: string): Promise<TSPeer | undefined> {
   );
 }
 
-export async function getExitNodes(): Promise<TSExitNode[]> {
+export async function getExitNodes(): Promise<ExitNode[]> {
   const peers = await getPeers();
-  return peers.filter((v): v is TSExitNode => TSExitNode.safeParse(v).success);
+  return peers.filter((v): v is ExitNode => ExitNode.safeParse(v).success);
 }
 
 export async function getMullvadNodes(
   country?: string,
   city?: string
-): Promise<TSMullvadNode[]> {
+): Promise<MullvadNode[]> {
   const nodes = (await getPeers()).filter(
-    (v): v is TSMullvadNode => TSMullvadNode.safeParse(v).success
+    (v): v is MullvadNode => MullvadNode.safeParse(v).success
   );
   if (!country) return nodes;
 
@@ -120,7 +120,7 @@ export async function getMullvadNodes(
 export async function suggestMullvadNode(
   country?: string,
   city?: string
-): Promise<TSMullvadNode | undefined> {
+): Promise<MullvadNode | undefined> {
   let mvNodes = (await getMullvadNodes(country, city))
     .filter((v) => v.Online)
     .sort((a, b) => b.Location.Priority - a.Location.Priority);
@@ -141,16 +141,16 @@ export async function suggestMullvadNode(
 export async function suggestExitNode(
   arg1?: string,
   city?: string
-): Promise<TSExitNode | undefined> {
+): Promise<ExitNode | undefined> {
   if (!arg1) return await getSuggestedExitNode();
 
   const node = await getPeer(arg1);
-  if (node) return TSExitNode.parse(node);
+  if (node) return ExitNode.parse(node);
 
   return await suggestMullvadNode(arg1, city);
 }
 
-export async function setExitNode(node: TSExitNode | string | undefined) {
+export async function setExitNode(node: ExitNode | string | undefined) {
   const name = isString(node) ? node : node?.DNSName;
   if (name) await $`tailscale set --exit-node=${name}`;
   else await $`tailscale set --exit-node=`;
