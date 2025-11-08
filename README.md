@@ -4,7 +4,7 @@ Small CLI tool and JavaScript library for suggesting and connecting to Tailscale
 
 Requires [Deno](https://deno.com/)
 
-## Usage
+## Basic Usage
 
 ```
 > tsvpn connect
@@ -19,6 +19,10 @@ Connecting to: us-chi-wg-307.mullvad.ts.net.
 > tsvpn connect US-DAL
 > tsvpn disconnect
 
-> tsvpn status
-Disconnected
+> tsvpn toggle USA "Denver, CO"
+Connecting to: us-den-...
+> tsvpn toggle USA "Denver, CO"
+Disconnecting
 ```
+
+Use `tsvpn` to show more commands.

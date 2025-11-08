@@ -6,10 +6,10 @@
     "jsr:@david/path@0.2": "0.2.0",
     "jsr:@david/which@~0.4.1": "0.4.1",
     "jsr:@es-toolkit/es-toolkit@^1.41.0": "1.41.0",
-    "jsr:@std/assert@1": "1.0.15",
     "jsr:@std/bytes@^1.0.5": "1.0.6",
     "jsr:@std/cli@^1.0.23": "1.0.23",
     "jsr:@std/fmt@1": "1.0.8",
+    "jsr:@std/fmt@^1.0.8": "1.0.8",
     "jsr:@std/fs@1": "1.0.19",
     "jsr:@std/internal@^1.0.10": "1.0.12",
     "jsr:@std/internal@^1.0.12": "1.0.12",
@@ -30,7 +30,7 @@
         "jsr:@david/console-static-text",
         "jsr:@david/path",
         "jsr:@david/which",
-        "jsr:@std/fmt",
+        "jsr:@std/fmt@1",
         "jsr:@std/fs",
         "jsr:@std/io",
         "jsr:@std/path@1"
@@ -48,12 +48,6 @@
     },
     "@es-toolkit/es-toolkit@1.41.0": {
       "integrity": "4df54a18e80b869880cee8a8a9ff7a5e1c424a9fd0916dccd38d34686f110071"
-    },
-    "@std/assert@1.0.15": {
-      "integrity": "d64018e951dbdfab9777335ecdb000c0b4e3df036984083be219ce5941e4703b",
-      "dependencies": [
-        "jsr:@std/internal@^1.0.12"
-      ]
     },
     "@std/bytes@1.0.6": {
       "integrity": "f6ac6adbd8ccd99314045f5703e23af0a68d7f7e58364b47d2c7f408aeb5820a"
@@ -112,8 +106,8 @@
     "dependencies": [
       "jsr:@david/dax@~0.43.2",
       "jsr:@es-toolkit/es-toolkit@^1.41.0",
-      "jsr:@std/assert@1",
       "jsr:@std/cli@^1.0.23",
+      "jsr:@std/fmt@^1.0.8",
       "npm:p-memoize@8",
       "npm:zod@^4.1.12"
     ]

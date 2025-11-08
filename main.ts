@@ -3,6 +3,8 @@
 import { parseArgs } from "@std/cli/parse-args";
 import $ from "@david/dax";
 import * as TS from "./tailscale.ts";
+import { pick, sortBy, trimEnd, uniqBy } from "@es-toolkit/es-toolkit";
+import { gray } from "@std/fmt/colors";
 
 async function suggestNode(mullvad: boolean, country: string, city: string) {
   return mullvad
@@ -11,7 +13,7 @@ async function suggestNode(mullvad: boolean, country: string, city: string) {
 }
 
 function logNode(prefix: string, node: TS.Peer) {
-  $.logStep(prefix, node.DNSName);
+  $.logStep(prefix, trimEnd(node.DNSName, "."));
   if (!node.Online) $.logError("❌ Exit node is offline", "");
   if (!node.ExitNodeOption)
     $.logError("❌ Device is not running an exit node", "");
@@ -82,13 +84,37 @@ switch (Deno.args[0]) {
     const arg = Deno.args[1];
     const node = await TS.getCurrentExitNode();
     if (arg == "plain") {
-      if (node) console.log(node.DNSName);
+      if (node) console.log(trimEnd(node.DNSName, "."));
       else console.log("Not connected");
     } else if (arg == "json") console.log(JSON.stringify(node, null, 2));
     else {
       if (node) logNode("Connected to:", node);
       else $.logLight("Not connected");
     }
+    break;
+  }
+  case "list": {
+    let { country, city } = parseConnectArgs();
+    country = country?.toLowerCase();
+    city = city?.toLowerCase();
+
+    const nodes = await TS.getMullvadNodes(country, city);
+    if (!nodes.length) $.logError("No nodes found", "");
+
+    let locs = nodes.map((v) =>
+      pick(v.Location, ["Country", "CountryCode", "City", "CityCode"])
+    );
+    locs = sortBy(uniqBy(locs, JSON.stringify), ["Country", "City"]);
+
+    if (locs.length == 1)
+      for (const node of sortBy(nodes, ["DNSName"]))
+        $.log(trimEnd(node.DNSName, "."), gray(`(${node.TailscaleIPs[0]})`));
+    else
+      for (const loc of locs)
+        $.log(
+          `${loc.Country}: ${loc.City}`,
+          gray(`(${loc.CountryCode}-${loc.CityCode})`)
+        );
     break;
   }
   default:
@@ -99,5 +125,6 @@ switch (Deno.args[0]) {
     $.log();
     $.log("  tsvpn suggest [--mullvad] [<country>] [<city>]");
     $.log("  tsvpn status [plain|json]");
+    $.log("  tsvpn list [<country>] [<city>]");
     Deno.exit(1);
 }

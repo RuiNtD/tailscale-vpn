@@ -3,16 +3,20 @@ import * as z from "zod";
 import { isString, sample } from "@es-toolkit/es-toolkit";
 import pMemoize from "p-memoize";
 
-const ExitNodeLocation = z.looseObject(
+export const ExitNodeLocation = z.object(
   {
     Country: z.string(),
     CountryCode: z.string(),
     City: z.string(),
     CityCode: z.string(),
+    Latitude: z.number(),
+    Longitude: z.number(),
     Priority: z.number(),
   },
   "Not a location-based exit node"
 );
+export type ExitNodeLocation = z.infer<typeof ExitNodeLocation>;
+
 export const Peer = z.looseObject({
   ID: z.string(),
   PublicKey: z.string(),
@@ -98,23 +102,26 @@ export async function getMullvadNodes(
   country?: string,
   city?: string
 ): Promise<MullvadNode[]> {
-  const nodes = (await getPeers()).filter(
+  let nodes = (await getPeers()).filter(
     (v): v is MullvadNode => MullvadNode.safeParse(v).success
   );
   if (!country) return nodes;
 
-  if (city)
-    return nodes.filter(
-      ({ Location: loc }) =>
-        (country == loc.Country || country == loc.CountryCode) &&
-        (city == loc.City || city == loc.CityCode)
-    );
-  return nodes.filter(
+  country = country.toLowerCase();
+  city = city?.toLowerCase();
+
+  nodes = nodes.filter(
     ({ Location: loc }) =>
-      country == `${loc.CountryCode}-${loc.CityCode}` ||
-      country == loc.Country ||
-      country == loc.CountryCode
+      country == `${loc.CountryCode}-${loc.CityCode}`.toLowerCase() ||
+      country == loc.Country.toLowerCase() ||
+      country == loc.CountryCode.toLowerCase()
   );
+  if (city)
+    nodes = nodes.filter(
+      ({ Location: loc }) =>
+        city == loc.City.toLowerCase() || city == loc.CityCode.toLowerCase()
+    );
+  return nodes;
 }
 
 export async function suggestMullvadNode(
