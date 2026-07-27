@@ -44,7 +44,7 @@ async function disconnect() {
 }
 
 function assertNode(
-  node: TS.ExitNode | undefined
+  node: TS.ExitNode | undefined,
 ): asserts node is TS.ExitNode {
   if (node) return;
   $.logError("No nodes found", "");
@@ -102,9 +102,12 @@ switch (Deno.args[0]) {
     if (!nodes.length) $.logError("No nodes found", "");
 
     let locs = nodes.map((v) =>
-      pick(v.Location, ["Country", "CountryCode", "City", "CityCode"])
+      pick(v.Location, ["Country", "CountryCode", "City", "CityCode"]),
     );
-    locs = sortBy(uniqBy(locs, JSON.stringify), ["Country", "City"]);
+    locs = sortBy(
+      uniqBy(locs, (v) => JSON.stringify(v)),
+      ["Country", "City"],
+    );
 
     if (locs.length == 1)
       for (const node of sortBy(nodes, ["DNSName"]))
@@ -113,7 +116,7 @@ switch (Deno.args[0]) {
       for (const loc of locs)
         $.log(
           `${loc.Country}: ${loc.City}`,
-          gray(`(${loc.CountryCode}-${loc.CityCode})`)
+          gray(`(${loc.CountryCode}-${loc.CityCode})`),
         );
     break;
   }

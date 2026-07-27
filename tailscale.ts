@@ -11,9 +11,9 @@ export const ExitNodeLocation = z.object(
     CityCode: z.string(),
     Latitude: z.number(),
     Longitude: z.number(),
-    Priority: z.number(),
+    Priority: z.number().optional(),
   },
-  "Not a location-based exit node"
+  "Not a location-based exit node",
 );
 export type ExitNodeLocation = z.infer<typeof ExitNodeLocation>;
 
@@ -89,7 +89,7 @@ export async function getPeer(name: string): Promise<Peer | undefined> {
       v.DNSName == namelc ||
       v.DNSName == `${namelc}.` ||
       v.DNSName == `${namelc}.${dnsSuffix}.` ||
-      v.TailscaleIPs.includes(name)
+      v.TailscaleIPs.includes(name),
   );
 }
 
@@ -100,10 +100,10 @@ export async function getExitNodes(): Promise<ExitNode[]> {
 
 export async function getMullvadNodes(
   country?: string,
-  city?: string
+  city?: string,
 ): Promise<MullvadNode[]> {
   let nodes = (await getPeers()).filter(
-    (v): v is MullvadNode => MullvadNode.safeParse(v).success
+    (v): v is MullvadNode => MullvadNode.safeParse(v).success,
   );
   if (!country) return nodes;
 
@@ -114,23 +114,23 @@ export async function getMullvadNodes(
     ({ Location: loc }) =>
       country == `${loc.CountryCode}-${loc.CityCode}`.toLowerCase() ||
       country == loc.Country.toLowerCase() ||
-      country == loc.CountryCode.toLowerCase()
+      country == loc.CountryCode.toLowerCase(),
   );
   if (city)
     nodes = nodes.filter(
       ({ Location: loc }) =>
-        city == loc.City.toLowerCase() || city == loc.CityCode.toLowerCase()
+        city == loc.City.toLowerCase() || city == loc.CityCode.toLowerCase(),
     );
   return nodes;
 }
 
 export async function suggestMullvadNode(
   country?: string,
-  city?: string
+  city?: string,
 ): Promise<MullvadNode | undefined> {
   let mvNodes = (await getMullvadNodes(country, city))
     .filter((v) => v.Online)
-    .sort((a, b) => b.Location.Priority - a.Location.Priority);
+    .sort((a, b) => (b.Location.Priority || 0) - (a.Location.Priority || 0));
   if (!mvNodes.length) return;
 
   const topPriority = mvNodes[0].Location.Priority;
@@ -147,7 +147,7 @@ export async function suggestMullvadNode(
 
 export async function suggestExitNode(
   arg1?: string,
-  city?: string
+  city?: string,
 ): Promise<ExitNode | undefined> {
   if (!arg1) return await getSuggestedExitNode();
 
