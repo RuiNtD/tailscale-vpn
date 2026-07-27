@@ -1,2 +1,4 @@
 @echo off
-deno -A %~dp0\main.ts %*
+pushd %~dp0
+deno task -q start %*
+popd

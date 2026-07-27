@@ -3,11 +3,11 @@
     "start": "deno run -A main.ts"
   },
   "imports": {
-    "@david/dax": "jsr:@david/dax@^0.43.2",
-    "@es-toolkit/es-toolkit": "jsr:@es-toolkit/es-toolkit@^1.41.0",
-    "@std/cli": "jsr:@std/cli@^1.0.23",
-    "@std/fmt": "jsr:@std/fmt@^1.0.8",
+    "@david/dax": "jsr:@david/dax@^0.49.0",
+    "@es-toolkit/es-toolkit": "jsr:@es-toolkit/es-toolkit@^1.50.0",
+    "@std/cli": "jsr:@std/cli@^1.0.32",
+    "@std/fmt": "jsr:@std/fmt@^1.0.10",
     "p-memoize": "npm:p-memoize@^8.0.0",
-    "zod": "npm:zod@^4.1.12"
+    "zod": "npm:zod@^4.4.3"
   }
 }
